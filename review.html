@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>骨格診断 中身レビュー（3タイプ＋問診）</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Shippori+Mincho:wght@400;500;600;700;800&family=Noto+Serif+JP:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=2" />
+<link rel="stylesheet" href="redesign.css?v=1" />
+<link rel="stylesheet" href="pc.css?v=3" />
+<style>
+  .rv-wrap{ max-width:980px; margin:0 auto; padding:30px 20px 80px; }
+  .rv-h1{ font-family:var(--lx-serif); font-size:26px; color:var(--lx-ink); text-align:center; margin:10px 0 6px; }
+  .rv-sub{ text-align:center; color:var(--lx-muted); font-family:var(--lx-sans); font-size:13px; margin-bottom:30px; }
+  .rv-type{ background:var(--lx-paper); border:1px solid var(--lx-line); border-radius:12px; padding:34px 30px; margin-bottom:26px; box-shadow:0 12px 30px rgba(71,63,54,.06); }
+  .rv-h2{ font-family:var(--lx-serif); font-size:20px; color:var(--lx-ink); margin:38px 0 14px; border-bottom:1px solid var(--lx-line); padding-bottom:10px; }
+  .rv-q{ background:#fff; border:1px solid var(--lx-line); border-radius:10px; padding:14px 18px; margin-bottom:10px; font-family:var(--lx-sans); font-size:13.5px; }
+  .rv-q b{ color:var(--lx-rose-deep); }
+  .rv-q .opt{ display:block; color:var(--lx-ink-2); margin:4px 0 0 8px; }
+  .rv-q .opt em{ font-style:normal; color:var(--lx-muted); }
+</style>
+</head>
+<body class="lx">
+<div class="rv-wrap">
+  <h1 class="rv-h1">骨格診断 — 中身レビュー</h1>
+  <p class="rv-sub">3タイプの結果文言（実際の表示と同じ）＋問診14問。気になる箇所を教えてください。</p>
+  <div id="types"></div>
+  <h2 class="rv-h2">問診 14問（選択肢→タイプ）</h2>
+  <div id="questions"></div>
+</div>
+
+<script type="module">
+import { TYPES, TYPE_ORDER, QUESTIONS } from './data.js?v=1';
+const typeName={straight:'ストレート',wave:'ウェーブ',natural:'ナチュラル'};
+const typesEl=document.getElementById('types');
+typesEl.innerHTML = TYPE_ORDER.map(id=>{
+  const t=TYPES[id], b=t.bridal;
+  return `<div class="rv-type">
+    <div class="pc-res-head" style="--sa:${t.accent}">
+      <div class="pc-res-season">${t.emoji} 骨格タイプ</div>
+      <h3 class="pc-res-type">${t.name} <small>(${t.en})</small></h3>
+      <p class="pc-res-catch">${t.catch}</p>
+    </div>
+    <p class="pc-res-charm">${t.charm}</p>
+    <p class="pc-res-desc">${t.desc}</p>
+    <div class="pc-block"><h4>骨格の特徴</h4><ul>${t.characteristics.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+    <div class="pc-wedding">
+      <div class="pc-wedding-head"><span class="pc-wd-label">FOR YOUR WEDDING</span><h4>似合うウェディングドレス</h4></div>
+      <img class="pc-type-img" src="assets/type-${id}.png" alt="${t.name}に似合うドレス" onerror="this.style.display='none'">
+      <div class="pc-wd-grid">
+        <div class="pc-wd-card"><b>👗 シルエット</b><p>${b.silhouette}</p></div>
+        <div class="pc-wd-card"><b>💠 ネックライン</b><p>${b.neckline}</p></div>
+        <div class="pc-wd-card"><b>🧵 素材・装飾</b><p>${b.material}</p></div>
+        <div class="pc-wd-card"><b>🚫 避けたいデザイン</b><p>${b.avoid}</p></div>
+      </div>
+    </div>
+    <div class="pc-info">
+      <div><b>得意なアイテム</b>${t.items.good}</div>
+      <div><b>苦手なアイテム</b>${t.items.bad}</div>
+    </div>
+  </div>`;
+}).join('');
+
+const qEl=document.getElementById('questions');
+qEl.innerHTML = QUESTIONS.map((q,i)=>`<div class="rv-q"><b>Q${i+1}. ${q.q}</b>（重み${q.w}）
+  ${q.o.map(o=>`<span class="opt">・${o.t} <em>→${typeName[o.type]}</em></span>`).join('')}
+</div>`).join('');
+</script>
+</body>
+</html>
