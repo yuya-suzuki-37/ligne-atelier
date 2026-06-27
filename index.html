@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Shippori+Mincho:wght@400;500;600;700;800&family=Noto+Serif+JP:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=1" />
 <link rel="stylesheet" href="redesign.css?v=1" />
-<link rel="stylesheet" href="pc.css?v=10" />
+<link rel="stylesheet" href="pc.css?v=11" />
 </head>
 <body class="lx">
 
@@ -53,8 +53,8 @@
   <!-- STEP 01 全身写真（写真ファースト） -->
   <div class="lx-sec-head">
     <span class="lx-sec-no">STEP 01</span>
-    <h2 class="lx-sec-title">全身写真でAI骨格解析</h2>
-    <p class="lx-sec-sub">正面・全身・直立の写真から、AIが肩幅・腰位置・重心のバランスを解析します。写真は端末内で処理され外部送信されません。</p>
+    <h2 class="lx-sec-title">全身写真でAI骨格解析（任意）</h2>
+    <p class="lx-sec-sub">写真があると、AIが肩幅・腰位置・重心を読み取って精度が上がります。<b>写真なしでも質問だけで診断できます</b>。写真は端末内で処理され外部送信されません。</p>
   </div>
   <div class="lx-upload-panel">
     <div id="pc-upload">
@@ -62,14 +62,15 @@
       <label for="pc-file" class="pc-upload-btn">📷 全身写真を選ぶ</label>
       <p class="pc-paste-hint">または <b>⌘V で貼り付け</b> ／ ここに画像を <b>ドラッグ&ドロップ</b></p>
       <div class="preview" id="pc-preview" hidden><canvas id="pc-canvas"></canvas></div>
-      <p id="pc-status" class="pc-status">正面・全身・直立がおすすめ。写真は「診断する」を押したときにAIが解析します（写真なしでも質問だけで診断できます）。</p>
+      <p id="pc-status" class="pc-status">正面・全身・直立がおすすめ。写真は「診断する」を押したときにAIが解析します。</p>
     </div>
   </div>
+  <div class="pc-skip-row"><a href="#pc-step2" class="pc-skip-link" id="pc-skip-photo">写真なしで質問に進む →</a></div>
 
   <!-- STEP 02 仕上げの質問 -->
-  <div class="lx-sec-head" style="margin-top:46px">
+  <div class="lx-sec-head" id="pc-step2" style="margin-top:46px; scroll-margin-top:20px">
     <span class="lx-sec-no">STEP 02</span>
-    <h2 class="lx-sec-title">仕上げの質問</h2>
+    <h2 class="lx-sec-title">質問に答える</h2>
     <p class="lx-sec-sub">写真だけでは写らない「質感・骨の質」を補って、診断を仕上げます。当てはまるものを選んでください（最低8問・多いほど正確）。</p>
   </div>
   <div class="pc-progress"><div id="pc-progress-bar"></div></div>
@@ -101,6 +102,6 @@
 
 <div id="pc-loading" class="pc-loading" hidden><div class="pc-spin"></div><span id="pc-loading-text">処理中…</span></div>
 
-<script type="module" src="app.js?v=13"></script>
+<script type="module" src="app.js?v=14"></script>
 </body>
 </html>

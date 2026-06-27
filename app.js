@@ -2,7 +2,7 @@
 // 骨格診断 MVP — メインコントローラ
 // 問診(必須)＋全身写真(任意・MediaPipe Poseで肩/ヒップ比) → 3タイプ → 結果
 // ===================================================================
-import { QUESTIONS, TYPES, TYPE_ORDER, MIX_HINT, MIX_COMBO } from './data.js?v=6';
+import { QUESTIONS, TYPES, TYPE_ORDER, MIX_HINT, MIX_COMBO, QUESTION_HINTS } from './data.js?v=7';
 import { extractPose } from './analyzer.js?v=2';
 import { diagnose } from './diagnosis.js?v=4';
 
@@ -100,13 +100,17 @@ function buildQuestions(){
   const wrap=$('#pc-questions-list'); wrap.innerHTML='';
   QUESTIONS.forEach((q,qi)=>{
     const fs=document.createElement('fieldset'); fs.className='pc-q';
-    fs.innerHTML=`<legend>Q${qi+1}. ${q.q}</legend><img class="pc-q-strip" src="assets/q-${q.id}.png" alt="" loading="lazy" onerror="this.remove()">`;
+    const hint = QUESTION_HINTS[q.id] ? `<p class="pc-q-hint">${QUESTION_HINTS[q.id]}</p>` : '';
+    fs.innerHTML=`<legend>Q${qi+1}. ${q.q}</legend><img class="pc-q-strip" src="assets/q-${q.id}.png" alt="" loading="lazy" onerror="this.remove()">${hint}`;
     const opts=document.createElement('div'); opts.className='pc-opts';
     q.o.forEach((op,oi)=>{
       const lab=document.createElement('label'); lab.className='pc-opt';
       lab.innerHTML=`<input type="radio" name="q${qi}" value="${oi}"><span>${op.t}</span>`;
       opts.appendChild(lab);
     });
+    const skip=document.createElement('label'); skip.className='pc-opt pc-opt-skip';
+    skip.innerHTML=`<input type="radio" name="q${qi}" value="skip"><span>ピンとこない（スキップ）</span>`;
+    opts.appendChild(skip);
     fs.appendChild(opts); wrap.appendChild(fs);
   });
   wrap.addEventListener('change', updateProgress);
@@ -171,14 +175,21 @@ $('#pc-diagnose').addEventListener('click', async()=>{
   }
   const answers=QUESTIONS.map((q,qi)=>{
     const sel=document.querySelector(`input[name="q${qi}"]:checked`);
-    return sel ? { type:q.o[+sel.value].type, w:q.w } : null;
+    if(!sel || sel.value==='skip') return null;
+    return { type:q.o[+sel.value].type, w:q.w };
   });
   const answered=answers.filter(Boolean).length;
   if(answered<8){ alert('できるだけ多く（最低8問）お答えください。現在 '+answered+' 問です。'); return; }
   const result=diagnose(answers, (state.pose && state.pose.ok) ? state.pose : null);
-  renderResult(result);
-  $('#pc-result').hidden=false;
-  $('#pc-result').scrollIntoView({behavior:'smooth',block:'start'});
+  // 発表演出: 少し溜めてからフェードインで結果を出す
+  showLoading('あなたの骨格タイプを診断しています…');
+  setTimeout(()=>{
+    hideLoading();
+    renderResult(result);
+    const res=$('#pc-result'); res.hidden=false;
+    res.classList.remove('pc-reveal'); void res.offsetWidth; res.classList.add('pc-reveal');
+    res.scrollIntoView({behavior:'smooth',block:'start'});
+  }, 1200);
 });
 
 // ---- 結果描画 ----
@@ -198,7 +209,7 @@ function renderResult(r){
 
   $('#pc-result-body').innerHTML=`
     <div class="pc-res-head" style="--sa:${t.accent}">
-      <div class="pc-res-season">${t.emoji} 骨格タイプ</div>
+      <div class="pc-res-season">${t.emoji} あなたの骨格タイプは</div>
       <h3 class="pc-res-type">${titleLine}</h3>
       <p class="pc-res-catch">${t.catch}</p>
       <span class="pc-conf" style="background:${cc}">診断の確からしさ：${cf}</span>
