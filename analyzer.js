@@ -26,5 +26,8 @@ export function extractPose(lm){
   const warnings=[];
   if(!fullBody) warnings.push('足首まで写っていれば重心まで解析できます');
   if(shRatio>1.6 || shRatio<0.6) warnings.push('比率が極端（斜め/手を広げている可能性）');
-  return { ok:true, shRatio, juushin, shoulderW, hipW, fullBody, warnings };
+  // 結果で写真にラインを重ねる用の主要座標（正規化0-1）
+  const pt=i=> lm[i] ? { x:lm[i].x, y:lm[i].y } : null;
+  const points={ sL:pt(11), sR:pt(12), hL:pt(23), hR:pt(24), aL:pt(27), aR:pt(28) };
+  return { ok:true, shRatio, juushin, shoulderW, hipW, fullBody, warnings, points };
 }

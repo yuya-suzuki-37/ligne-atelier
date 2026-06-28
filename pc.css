@@ -130,6 +130,12 @@ html{ scroll-behavior:smooth; }
 .pc-principle{ background:var(--lx-blush-soft); border:1px solid var(--lx-line); border-radius:14px; padding:18px 22px; }
 .pc-principle h4{ border-left:none; padding-left:0; margin-bottom:8px; }
 .pc-principle p{ font-family:var(--lx-sans); font-size:13.5px; line-height:1.9; color:var(--lx-ink-2); margin:0; }
+/* AIが読み取った“あなた”のバランス（写真＋ライン） */
+.pc-myframe{ text-align:center; }
+.pc-myframe h4{ border-left:none; padding-left:0; }
+.pc-pose-canvas{ width:100%; max-width:240px; border-radius:12px; box-shadow:0 10px 26px rgba(71,63,54,.16); display:block; margin:6px auto 12px; background:var(--lx-cream-2); }
+.pc-fr-sh{ color:#c4699f; font-weight:600; }
+.pc-fr-hip{ color:#6f8055; font-weight:600; }
 .pc-block h4{ font-family:var(--lx-serif); font-size:17px; color:var(--lx-ink); margin:0 0 12px; padding-left:12px; border-left:3px solid var(--lx-rose); }
 .pc-sw-grid{ display:flex; flex-wrap:wrap; gap:12px; }
 .pc-sw-grid.mini{ gap:8px; }

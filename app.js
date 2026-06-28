@@ -3,7 +3,7 @@
 // 問診(必須)＋全身写真(任意・MediaPipe Poseで肩/ヒップ比) → 3タイプ → 結果
 // ===================================================================
 import { QUESTIONS, TYPES, TYPE_ORDER, MIX_HINT, MIX_COMBO, QUESTION_HINTS } from './data.js?v=7';
-import { extractPose } from './analyzer.js?v=2';
+import { extractPose } from './analyzer.js?v=3';
 import { diagnose } from './diagnosis.js?v=4';
 
 const $=s=>document.querySelector(s);
@@ -206,6 +206,11 @@ function renderResult(r){
     : `${t.name} <small>(${t.en})</small>`;
   const mixText = MIX_COMBO[`${r.first}_${r.second}`] || (MIX_HINT[r.first]||'').replace('{2nd}', s2.name);
   const mixHint = r.mixed ? `<p class="pc-res-personal">${mixText}</p>` : '';
+  // 自分ごと感: アップ写真にAIが読み取ったラインを重ねて表示
+  const juTxt = (state.pose && state.pose.juushin!=null) ? (state.pose.juushin<=0.55?'上重心（ウエスト高め）':state.pose.juushin>=0.70?'下重心（ウエスト低め）':'バランス型') : null;
+  const frameBlock = (r.photoUsed && state.pose && state.pose.points) ? `<div class="pc-block pc-myframe"><h4>AIが読み取った“あなた”のバランス</h4>
+      <canvas id="pc-pose-canvas" class="pc-pose-canvas"></canvas>
+      <p class="pc-tip"><span class="pc-fr-sh">肩のライン</span>と<span class="pc-fr-hip">ヒップのライン</span>を検出。肩/ヒップ比 ${state.pose.shRatio.toFixed(2)}${juTxt?` ・重心は${juTxt}`:''}。<br><small>写真は端末内だけで処理し、外部には送信していません。</small></p></div>` : '';
 
   $('#pc-result-body').innerHTML=`
     <div class="pc-res-head" style="--sa:${t.accent}">
@@ -221,6 +226,8 @@ function renderResult(r){
 
     <div class="pc-block"><h4>あなたの骨格の特徴</h4>
       <ul>${t.characteristics.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+
+    ${frameBlock}
 
     <div class="pc-block pc-principle"><h4>似合わせの軸</h4><p>${t.principle}</p></div>
 
@@ -271,9 +278,34 @@ function renderResult(r){
       <button class="lx-btn lx-btn-green" id="pc-restart">もう一度診断する</button>
     </div>
   `;
+  if(r.photoUsed) drawPoseAnalysis($('#pc-pose-canvas'));
   $('#pc-save').addEventListener('click',()=>makeResultCard(r));
   $('#pc-print').addEventListener('click',()=>window.print());
   $('#pc-restart').addEventListener('click',restart);
+}
+
+// ---- アップ写真にAIが読み取ったライン(肩/ヒップ/重心)を重ねて描画 ----
+function drawPoseAnalysis(cv){
+  if(!cv || !state.imageData || !(state.pose&&state.pose.points)) return;
+  const W=state.W, H=state.H, p=state.pose.points;
+  const outW=300, outH=Math.max(40, Math.round(outW*H/W));
+  cv.width=outW; cv.height=outH;
+  const c=cv.getContext('2d');
+  const off=document.createElement('canvas'); off.width=W; off.height=H;
+  off.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(state.imageData),W,H),0,0);
+  c.drawImage(off,0,0,W,H,0,0,outW,outH);
+  const X=x=>x*outW, Y=y=>y*outH;
+  const line=(a,b,col)=>{ if(!a||!b) return; c.strokeStyle=col; c.lineWidth=3; c.lineCap='round';
+    c.beginPath(); c.moveTo(X(a.x),Y(a.y)); c.lineTo(X(b.x),Y(b.y)); c.stroke();
+    [a,b].forEach(q=>{ c.fillStyle='#fff'; c.beginPath(); c.arc(X(q.x),Y(q.y),4,0,Math.PI*2); c.fill(); c.lineWidth=1.5; c.strokeStyle='rgba(71,63,54,.3)'; c.stroke(); }); };
+  line(p.sL,p.sR,'rgba(196,139,166,.95)'); // 肩=ローズ
+  line(p.hL,p.hR,'rgba(126,140,106,.95)'); // ヒップ=セージ
+  // 重心の目安ライン（肩中点と腰中点の中間あたりに横ライン）
+  if(p.sL&&p.sR&&p.hL&&p.hR){
+    const my=( (p.sL.y+p.sR.y)/2*0.35 + (p.hL.y+p.hR.y)/2*0.65 );
+    c.strokeStyle='rgba(180,138,94,.6)'; c.lineWidth=1.5; c.setLineDash([5,5]);
+    c.beginPath(); c.moveTo(outW*0.12,Y(my)); c.lineTo(outW*0.88,Y(my)); c.stroke(); c.setLineDash([]);
+  }
 }
 
 // ---- 結果を画像カードで保存 ----
