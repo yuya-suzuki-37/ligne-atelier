@@ -2,7 +2,7 @@
 // 骨格診断 MVP — メインコントローラ
 // 問診(必須)＋全身写真(任意・MediaPipe Poseで肩/ヒップ比) → 3タイプ → 結果
 // ===================================================================
-import { QUESTIONS, TYPES, TYPE_ORDER, MIX_HINT, MIX_COMBO, QUESTION_HINTS } from './data.js?v=7';
+import { QUESTIONS, TYPES, TYPE_ORDER, MIX_HINT, MIX_COMBO, QUESTION_HINTS } from './data.js?v=8';
 import { extractPose } from './analyzer.js?v=3';
 import { diagnose } from './diagnosis.js?v=4';
 
@@ -117,10 +117,16 @@ function buildQuestions(){
   updateProgress();
 }
 function updateProgress(){
-  const total=QUESTIONS.length;
-  const done=QUESTIONS.filter((q,qi)=>document.querySelector(`input[name="q${qi}"]:checked`)).length;
-  $('#pc-progress-bar').style.width=(done/total*100)+'%';
-  $('#pc-progress-text').textContent=`${done} / ${total} 問`;
+  const total=QUESTIONS.length, MIN=8;
+  let checked=0, real=0;
+  QUESTIONS.forEach((q,qi)=>{
+    const sel=document.querySelector(`input[name="q${qi}"]:checked`);
+    if(sel){ checked++; if(sel.value!=='skip') real++; }
+  });
+  $('#pc-progress-bar').style.width=(checked/total*100)+'%';
+  const txt=$('#pc-progress-text');
+  if(real>=MIN){ txt.textContent=`${real}問 回答済み ✓ 診断できます（答えるほど正確になります）`; txt.classList.add('pc-progress-ready'); }
+  else { txt.textContent=`${real} / 最低${MIN}問　あと${MIN-real}問で診断できます`; txt.classList.remove('pc-progress-ready'); }
 }
 
 // 写真から「重心(Q3)・首肩(Q7)」を自動回答し、その質問は画面から隠す（信頼できる範囲だけ写真化）
@@ -206,6 +212,11 @@ function renderResult(r){
     : `${t.name} <small>(${t.en})</small>`;
   const mixText = MIX_COMBO[`${r.first}_${r.second}`] || (MIX_HINT[r.first]||'').replace('{2nd}', s2.name);
   const mixHint = r.mixed ? `<p class="pc-res-personal">${mixText}</p>` : '';
+  // 自分ごと感: 回答がどのタイプにどれだけ傾いたか（写真なしでも出る）
+  const shareBlock = `<div class="pc-block pc-share"><h4>あなたの回答の傾向</h4>
+      ${Object.entries(r.share).map(([k,v])=>{ const ty=TYPES[k], pct=Math.round(v*100);
+        return `<div class="pc-share-row"><span class="pc-share-name">${ty.name}</span><div class="pc-share-track"><i style="width:${pct}%;background:${ty.accent}"></i></div><b class="pc-share-pct">${pct}%</b></div>`; }).join('')}
+      <p class="pc-share-note">3タイプの要素は誰にでも少しずつあります。あなたは<b>${t.name}</b>の要素がいちばん強く出ました。</p></div>`;
   // 自分ごと感: アップ写真にAIが読み取ったラインを重ねて表示
   const juTxt = (state.pose && state.pose.juushin!=null) ? (state.pose.juushin<=0.55?'上重心（ウエスト高め）':state.pose.juushin>=0.70?'下重心（ウエスト低め）':'バランス型') : null;
   const frameBlock = (r.photoUsed && state.pose && state.pose.points) ? `<div class="pc-block pc-myframe"><h4>AIが読み取った“あなた”のバランス</h4>
@@ -226,6 +237,8 @@ function renderResult(r){
 
     <div class="pc-block"><h4>あなたの骨格の特徴</h4>
       <ul>${t.characteristics.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+
+    ${shareBlock}
 
     ${frameBlock}
 
@@ -270,6 +283,8 @@ function renderResult(r){
     </div>
 
     ${ctaHtml}
+
+    ${t.closing?`<div class="pc-closing"><span class="pc-closing-mark">${t.emoji}</span><p>${t.closing}</p></div>`:''}
 
     <p class="pc-disclaimer">※ これは問診（と任意の写真）からの<strong>簡易的な目安</strong>です。特定団体（骨格スタイル協会・ICBI等）とは無関係・非公認で、専門家の対面診断に代わるものではありません。骨格診断は美容実務上の分類で、医学的・科学的診断ではありません。</p>
     <div class="pc-actions">
