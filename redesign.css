@@ -45,6 +45,7 @@ body.lx .petal-bg{ display:none !important; }
   padding:16px 42px; border-radius:999px; cursor:pointer;
   font-family:var(--lx-sans); font-weight:600; font-size:15px; letter-spacing:.08em;
   border:none; transition:.25s ease; text-decoration:none;
+  white-space:nowrap; max-width:100%; text-align:center; line-height:1.4;
 }
 .lx-btn-gold{ background:var(--lx-terra); color:#fff; box-shadow:0 12px 26px rgba(188,107,83,.24); }
 .lx-btn-gold:hover{ background:var(--lx-rose-deep); transform:translateY(-2px); }
